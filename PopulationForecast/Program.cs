@@ -22,6 +22,11 @@ namespace Pensive
                 Int32.TryParse(System.Configuration.ConfigurationManager.AppSettings["ArgumentId"], out argumentId);
             }
 
+            //1 - Generates only dummy data
+            //2 - Calculates the delta population for the dummy data imported via data factory job.
+            //3 - Predicts the population for next 3 years from the current month - calls the ML Service
+            //23 - Does 2 and 3 together
+
             TravelContext dbContext = new TravelContext();
             switch (argumentId)
             {
