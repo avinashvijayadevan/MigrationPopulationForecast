@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
-namespace DeltaCalculator
+namespace Pensive
 {
     public partial class TravelContext : DbContext
     {
@@ -19,6 +19,7 @@ namespace DeltaCalculator
         public virtual DbSet<DestinationAggregation> DestinationAggregations { get; set; }
         public virtual DbSet<OrignAggregation> OrignAggregations { get; set; }
         public virtual DbSet<PassengerInfoNew> PassengerInfoNews { get; set; }
+        public virtual DbSet<TravelRawData> TravelRawData { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -35,8 +36,6 @@ namespace DeltaCalculator
 
             modelBuilder.Entity<DeltaPopulation>(entity =>
             {
-                entity.Property(e => e.DeltaPopulationId).ValueGeneratedNever();
-
                 entity.Property(e => e.Place).IsUnicode(false);
             });
 
@@ -63,6 +62,20 @@ namespace DeltaCalculator
                 entity.Property(e => e.Mode).IsUnicode(false);
 
                 entity.Property(e => e.Orign).IsUnicode(false);
+            });
+
+            modelBuilder.Entity<TravelRawData>(entity =>
+            {
+                entity.HasKey(e => e.TravelId)
+                    .HasName("PK_TravelId");
+
+                entity.Property(e => e.DateOfBirth).IsUnicode(false);
+
+                entity.Property(e => e.Destination).IsUnicode(false);
+
+                entity.Property(e => e.Origin).IsUnicode(false);
+
+                entity.Property(e => e.TravelDate).IsUnicode(false);
             });
 
             OnModelCreatingPartial(modelBuilder);

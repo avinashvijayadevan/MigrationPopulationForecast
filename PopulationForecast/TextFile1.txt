@@ -1,0 +1,1 @@
+﻿"Results":{"output1":{"type":"table","value":{"ColumnNames":["Place","Year","Month","Scored Labels"],"ColumnTypes":["String","Int32","Int32","Double"],
