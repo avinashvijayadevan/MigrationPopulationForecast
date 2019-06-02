@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Configuration;
 
 namespace Pensive
 {
@@ -53,8 +54,8 @@ namespace Pensive
         public static void GenerateDummyTravelData(TravelContext dbContext)
         {
             List<PassengerInfo> passengerInfoList = new List<PassengerInfo>();
-            int reqCount = Int32.Parse(System.Configuration.ConfigurationManager.AppSettings["NoOfTravelRecordsToGenerate"]);
-            List<string> destList = (System.Configuration.ConfigurationManager.AppSettings["Destinations"].Split(",".ToCharArray())).ToList<string>();
+            int reqCount = Int32.Parse(ConfigurationManager.AppSettings["NoOfTravelRecordsToGenerate"]);
+            List<string> destList = (ConfigurationManager.AppSettings["Destinations"].Split(",".ToCharArray())).ToList<string>();
 
             Parallel.ForEach(destList, desti =>
             {
@@ -212,7 +213,6 @@ namespace Pensive
                 }
             }
 
-
             using (var client = new HttpClient())
             {
                 var scoreRequest = new
@@ -230,18 +230,24 @@ namespace Pensive
                     GlobalParameters = new Dictionary<string, string>() { { "Append score columns to output", "True" }, }
                 };
 
-                const string apiKey = "HDPhr8awTKqENg091NficxualFwzKYkx8uIxU+4GCZGrjdaGxkU8u8PsJRH8bSpSxr1TknixAdtYD9v2V1RmwQ==";
+                string apiUrl = null;
+                string apiKey = null;
+
+                if (bool.Parse(ConfigurationManager.AppSettings["UseLinerRegressionAlgorithm"]))
+                {
+                    apiUrl = ConfigurationManager.AppSettings["LinerRegressionAPI"];
+                    apiKey = ConfigurationManager.AppSettings["LinerRegressionKey"];
+                }
+                else
+                {
+                    apiUrl = ConfigurationManager.AppSettings["BoostedDecisionTreeRegressionAPI"];
+                    apiKey = ConfigurationManager.AppSettings["BoostedDecisionTreeRegressionKey"];
+                }
+
+                client.BaseAddress = new Uri(apiUrl + "&details=true");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-                client.BaseAddress = new Uri("https://ussouthcentral.services.azureml.net/workspaces/ce227c6f27064648ad83c97981125a9d/services/7e4766faff6c408882020544a25cd7e2/execute?api-version=2.0&details=true");
-
-                // WARNING: The 'await' statement below can result in a deadlock if you are calling this code from the UI thread of an ASP.Net application.
-                // One way to address this would be to call ConfigureAwait(false) so that the execution does not attempt to resume on the original context.
-                // For instance, replace code such as:
-                //      result = await DoSomeTask()
-                // with the following:
-                //      result = await DoSomeTask().ConfigureAwait(false)
-
                 HttpResponseMessage response = await client.PostAsJsonAsync("", scoreRequest);
+
                 if (response.IsSuccessStatusCode)
                 {
                     dbContext.DeltaPopulations.RemoveRange(dbContext.DeltaPopulations.Where(x => x.IsPredicted == true));
